@@ -8,7 +8,7 @@ object Config {
     const val debug = "debug"
 
     object Android {
-        const val minSdk = 25
+        const val minSdk = 24
         const val targetSdk = 32
         const val compileSdk = targetSdk
         const val instrumentedTestRunner = "androidx.test.runner.AndroidJUnitRunner"
