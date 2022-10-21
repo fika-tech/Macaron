@@ -21,7 +21,7 @@ class StateMachineProcessor<I : Intent, A : Action, R : Result, S : State, E : E
         .flatMap { stateNode -> stateNode.actions.entries }
         .find { actionMatcher -> actionMatcher.key.matches(action) }
         ?.value
-        ?.invoke(state, action)
+        ?.invoke(StateMachine.ProcessorNode(state, action))
         ?.onEach { node -> if (node is StateMachine.SideEffect.EventNode<*, E>) send(node.value) }
         ?.filterIsInstance<StateMachine.SideEffect.ResultNode<R, *>>()
         ?.map { node -> node.value }

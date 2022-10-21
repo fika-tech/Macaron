@@ -15,5 +15,5 @@ class StateMachineInterpreter<I : Intent, A : Action, R : Result, S : State, E :
         .flatMap { stateNode -> stateNode.intents.entries }
         .find { intentMatcher -> intentMatcher.key.matches(intent) }
         ?.value
-        ?.invoke(state, intent)
+        ?.invoke(StateMachine.InterpreterNode(state, intent))
 }
