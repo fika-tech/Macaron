@@ -5,7 +5,7 @@ Macaron is Kotlin Multiplatform MVI Framework.
 ## Usage
 
 ```
-def macaron_version = '0.0.1-beta05'
+def macaron_version = '0.0.2'
 
 dependencies {
     implementation "tech.fika.macaron:macaron-core:$macaron_version"
