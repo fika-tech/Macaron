@@ -1,4 +1,4 @@
-setupMultiplatform()
+setupMultiplatform(BuildTarget.Ios, BuildTarget.Android(namespace = "messaging"))
 
 kotlin {
     sourceSets {

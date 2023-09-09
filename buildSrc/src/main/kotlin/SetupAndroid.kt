@@ -1,7 +1,9 @@
 import org.gradle.api.Project
 
-fun Project.setupAndroid() {
+fun Project.setupAndroid(namespace: String) {
     android {
+        this.namespace = "${Config.group}.${namespace}"
+
         compileSdkVersion(Config.Android.compileSdk)
 
         defaultConfig {

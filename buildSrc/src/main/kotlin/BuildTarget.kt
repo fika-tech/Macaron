@@ -3,7 +3,7 @@ interface BuildTarget {
     interface Native : BuildTarget
     interface Darwin : Native
     interface Linux : Native
-    object Android : NonNative
+    data class Android(val namespace: String) : NonNative
     object Jvm : NonNative
     object Js : NonNative
     object Ios : Darwin
@@ -11,8 +11,6 @@ interface BuildTarget {
     object LinuxX64 : Linux
 }
 
-internal inline fun <reified T : BuildTarget> setup(buildTargets: Array<out BuildTarget>, block: () -> Unit) {
-    if (buildTargets.any { it is T }) {
-        block()
-    }
+internal inline fun <reified T : BuildTarget> setup(buildTargets: Array<out BuildTarget>, block: T.() -> Unit) {
+    buildTargets.filterIsInstance<T>().forEach(block)
 }
