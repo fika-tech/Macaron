@@ -2,18 +2,17 @@ package tech.fika.macaron.core.components
 
 import kotlinx.coroutines.flow.Flow
 import tech.fika.macaron.core.contract.Action
-import tech.fika.macaron.core.contract.Event
-import tech.fika.macaron.core.contract.Result
+import tech.fika.macaron.core.contract.Intent
 import tech.fika.macaron.core.contract.State
 
 /**
- * Processors receives [Action] from the [Interpreter] and processes it
+ * Interpreters receive [Intent] from user input and processed each it to flow of [Action]
  */
-interface Processor<A : Action, R : Result, S : State, E : Event> {
+interface Processor<I : Intent, A : Action, S : State> {
     /**
-     * Execute an [Action] given a current [State] and returns a stream of [Result]
+     * Execute an [Intent] given a current [State] and returns a stream of [Action]
      *
-     * Side-effects should be processed here (i.e. Usecases, Repository)
+     * Side-effects should be processed here (i.e. UseCases, Repository)
      */
-    suspend fun process(action: A, state: S, send: (E) -> Unit): Flow<R>
+    suspend fun process(intent: I, state: S): Flow<A>
 }
