@@ -8,22 +8,15 @@ sealed interface Contract
 interface Intent : Contract
 
 /**
- * Defines logic that should be executed by a processor
- */
-interface Action : Contract
-
-/**
  * Result from a processor
  */
-interface Result : Contract
+interface Action : Contract {
+    interface Event : Action
+    interface Message : Action
+}
 
 /**
  * Describe the state of the screen
  */
 interface State : Contract
-
-/**
- * One-time effects for the client (i.e. navigation, snackbars, animation)
- */
-interface Event : Contract
 
