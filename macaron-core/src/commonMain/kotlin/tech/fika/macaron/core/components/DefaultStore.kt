@@ -15,37 +15,36 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import tech.fika.macaron.core.contract.Action
-import tech.fika.macaron.core.contract.Event
 import tech.fika.macaron.core.contract.Intent
-import tech.fika.macaron.core.contract.Result
 import tech.fika.macaron.core.contract.State
 
+@Suppress("UNCHECKED_CAST")
 @OptIn(FlowPreview::class)
-class DefaultStore<I : Intent, A : Action, R : Result, S : State, E : Event>(
+class DefaultStore<I : Intent, A : Action, S : State>(
     initialState: S,
-    private val interpreter: Interpreter<I, A, S>,
-    private val processor: Processor<A, R, S, E>,
-    private val reducer: Reducer<R, S>,
-    private val middlewares: List<Middleware<I, A, R, S, E>> = emptyList(),
-    coroutineContext: CoroutineContext = Dispatchers.Main,
-) : Store<I, S, E> {
+    private val processor: Processor<I, A, S>,
+    private val reducer: Reducer<A, S>,
+    private val middlewares: List<Middleware<I, A, S>> = emptyList(),
+    coroutineContext: CoroutineContext = Dispatchers.Main.immediate,
+) : Store<I, A, S> {
     private val scope = CoroutineScope(coroutineContext + SupervisorJob())
     private val intents = MutableSharedFlow<I>(replay = Int.MAX_VALUE, extraBufferCapacity = Int.MAX_VALUE)
     private val _state = MutableStateFlow(initialState)
-    private val _events = MutableStateFlow(emptyList<E>())
+    private val _events = MutableStateFlow(emptyList<Action.Event>())
     override val state = _state
     override val currentState: S get() = _state.value
-    override val event = _events.map { it.firstOrNull() }.applyEventMiddlewares(middlewares)
+    override val event = _events.map { it.firstOrNull() as A? }
 
     init {
         scope.launch {
             intents
                 .applyIntentMiddlewares(middlewares)
-                .mapNotNull { intent -> interpreter.interpret(intent, currentState) }
+                .flatMapMerge { intent -> processor.process(intent, currentState) }
                 .applyActionMiddlewares(middlewares)
-                .flatMapMerge { action -> processor.process(action, currentState, ::send) }
-                .applyResultMiddlewares(middlewares)
-                .mapNotNull { result -> reducer.reduce(result, currentState) }
+                .mapNotNull { action ->
+                    if (action is Action.Event) action.effect()
+                    reducer.reduce(action, currentState)
+                }
                 .applyStateMiddlewares(middlewares)
                 .collect { state -> _state.value = state }
         }
@@ -55,12 +54,12 @@ class DefaultStore<I : Intent, A : Action, R : Result, S : State, E : Event>(
         scope.launch { intents.emit(intent) }
     }
 
-    override fun process(event: E) {
+    override fun process(event: A) {
         scope.launch { _events.emit(_events.value.filterNot { it == event }) }
     }
 
-    private fun send(event: E) {
-        scope.launch { _events.emit(_events.value + event) }
+    private suspend fun Action.Event.effect() {
+        _events.emit(_events.value + this)
     }
 
     override fun dispose() {
@@ -69,7 +68,7 @@ class DefaultStore<I : Intent, A : Action, R : Result, S : State, E : Event>(
 
     override fun collect(
         onState: (S) -> Unit,
-        onEvent: (E?) -> Unit,
+        onEvent: (A?) -> Unit,
     ): Job = scope.launch {
         launch { state.collect { onState(it) } }
         launch { event.collect { onEvent(it) } }
@@ -79,32 +78,20 @@ class DefaultStore<I : Intent, A : Action, R : Result, S : State, E : Event>(
      * Helper functions to apply [Middleware] to their intended stream
      */
     private fun Flow<I>.applyIntentMiddlewares(
-        middlewares: List<Middleware<I, A, R, S, E>>,
+        middlewares: List<Middleware<I, A, S>>,
     ): Flow<I> = middlewares.fold(this) { intents, middleware ->
         middleware.modifyIntents(intents, ::currentState)
     }
 
     private fun Flow<A>.applyActionMiddlewares(
-        middlewares: List<Middleware<I, A, R, S, E>>,
+        middlewares: List<Middleware<I, A, S>>,
     ): Flow<A> = middlewares.fold(this) { actions, middleware ->
         middleware.modifyActions(actions, ::currentState)
     }
 
-    private fun Flow<R>.applyResultMiddlewares(
-        middlewares: List<Middleware<I, A, R, S, E>>,
-    ): Flow<R> = middlewares.fold(this) { results, middleware ->
-        middleware.modifyResults(results, ::currentState)
-    }
-
     private fun Flow<S>.applyStateMiddlewares(
-        middlewares: List<Middleware<I, A, R, S, E>>,
+        middlewares: List<Middleware<I, A, S>>,
     ): Flow<S> = middlewares.fold(this) { state, middleware ->
         middleware.modifyStates(state)
-    }
-
-    private fun Flow<E?>.applyEventMiddlewares(
-        middlewares: List<Middleware<I, A, R, S, E>>,
-    ): Flow<E?> = middlewares.fold(this) { events, middleware ->
-        middleware.modifyEvents(events, ::currentState)
     }
 }

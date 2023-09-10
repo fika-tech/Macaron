@@ -1,14 +1,14 @@
 package tech.fika.macaron.core.components
 
-import tech.fika.macaron.core.contract.Result
+import tech.fika.macaron.core.contract.Action
 import tech.fika.macaron.core.contract.State
 
 /**
- * [Reducer] receives [Result]s from the [Processor] and creates a new [State]
+ * [Reducer] receives [Action]s from the [Processor] and updates the [State]
  */
-interface Reducer<in R : Result, S : State> {
+interface Reducer<A : Action, S : State> {
     /**
-     * A pure function that applies a [Result] to the current [State] and returns a new [State]
+     * A pure function that applies a [Action] to the current [State] and returns a new [State]
      */
-    suspend fun reduce(result: R, state: S): S?
+    suspend fun reduce(action: A, state: S): S
 }
