@@ -1,5 +1,5 @@
 [versions]
-androidGradle = "8.1.1"
+androidGradle = "7.4.2"
 kotlin = "1.9.10"
 coroutines = "1.7.3"
 androidxTest = "1.5.2"
@@ -10,7 +10,6 @@ kover = "0.5.1"
 kermit = "1.2.2"
 ktLint = "11.5.1"
 dokka = "1.7.20"
-swiftPackages = "2.0.3"
 
 [libraries]
 # Gradle

@@ -4,3 +4,4 @@ allprojects {
 }
 
 setupTestCoverage()
+setupKotlinCompile()
