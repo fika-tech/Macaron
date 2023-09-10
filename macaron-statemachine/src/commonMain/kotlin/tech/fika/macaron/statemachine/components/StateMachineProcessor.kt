@@ -17,7 +17,7 @@ class StateMachineProcessor<I : Intent, A : Action, S : State>(
         .flatMap { stateNode -> stateNode.intentMap.entries }
         .find { intentMatcher -> intentMatcher.key.matches(intent) }
         ?.value
-        ?.invoke(StateMachine.IntentNode(state = state, intent = intent))
+        ?.invoke(intent, state)
         ?.filterNotNull()
         ?: flowOf()
 }
