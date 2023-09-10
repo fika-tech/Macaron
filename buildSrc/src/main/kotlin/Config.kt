@@ -2,7 +2,7 @@ import org.gradle.api.JavaVersion
 
 object Config {
     const val group = "tech.fika.macaron"
-    const val defaultVersion = "SNAPSHOT"
+    const val version = "0.1.0"
     val javaVersion = JavaVersion.VERSION_17
     const val release = "release"
     const val debug = "debug"
