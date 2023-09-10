@@ -63,7 +63,6 @@ fun Project.setupMavenPublication() {
 
         extensions.getByType<SigningExtension>().run {
             useInMemoryPgpKeys(
-//                Property.get(Property.GpgKeyId, Config.Publication.properties),
                 Property.get(Property.GpgKey, Config.Publication.properties),
                 Property.get(Property.GpgPassword, Config.Publication.properties)
             )
