@@ -13,6 +13,6 @@ class StateMachineReducer<I : Intent, A : Action, S : State>(
         .flatMap { stateNode -> stateNode.actionMap.entries }
         .find { actionMatcher -> actionMatcher.key.matches(action) }
         ?.value
-        ?.invoke(StateMachine.ActionNode(action = action, state = state))
+        ?.invoke(action, state)
         ?: state
 }

@@ -50,18 +50,12 @@ open class StateMachine<I : Intent, A : Action, S : State>(
 
     /* Nodes */
 
-    data class IntentNode<I : Intent, S : State>(val intent: I, val state: S)
-
-    data class ActionNode<A : Action, S : State>(val action: A, val state: S)
-
     data class StateNode<I : Intent, A : Action, S : State>(
-        val intentMap: Map<Matcher<I, I>, suspend (IntentNode<I, S>) -> Flow<A>>,
-        val actionMap: Map<Matcher<A, A>, (ActionNode<A, S>) -> S?>,
+        val intentMap: Map<Matcher<I, I>, suspend (I, S) -> Flow<A>>,
+        val actionMap: Map<Matcher<A, A>, (A, S) -> S?>,
     )
 
-    /* Scopes */
-
-    data class IntentScope<I : Intent, A : Action, S : State>(
+    data class IntentNode<I : Intent, A : Action, S : State>(
         val intent: I,
         val state: S,
         internal val collector: FlowCollector<A>,
@@ -70,7 +64,7 @@ open class StateMachine<I : Intent, A : Action, S : State>(
         suspend operator fun A.unaryPlus() = emit(this)
     }
 
-    data class ActionScope<A : Action, S : State>(val action: A, val state: S)
+    data class ActionNode<A : Action, S : State>(val action: A, val state: S)
 
     /* Annotations */
 
@@ -96,33 +90,33 @@ open class StateMachine<I : Intent, A : Action, S : State>(
 
         @StateDsl
         inner class StateBuilder<STATE : S> {
-            private val intentMap = mutableMapOf<Matcher<I, I>, suspend (IntentNode<I, S>) -> Flow<A>>()
-            private val actionMap = mutableMapOf<Matcher<A, A>, (ActionNode<A, S>) -> S?>()
+            private val intentMap = mutableMapOf<Matcher<I, I>, suspend (I, S) -> Flow<A>>()
+            private val actionMap = mutableMapOf<Matcher<A, A>, (A, S) -> S?>()
 
             fun <INTENT : I> process(
                 intentMatcher: Matcher<I, INTENT>,
-                intent: @StateDsl suspend IntentScope<INTENT, A, STATE>.() -> Unit,
+                process: @StateDsl suspend IntentNode<INTENT, A, STATE>.() -> Unit,
             ) {
-                intentMap[intentMatcher] = { (intent, state) ->
+                intentMap[intentMatcher] = { intent, state ->
                     flow {
-                        intent(IntentScope(intent = intent, state = state, collector = this) as IntentScope<INTENT, A, STATE>)
+                        process(IntentNode(intent = intent, state = state, collector = this) as IntentNode<INTENT, A, STATE>)
                     }
                 }
             }
 
-            inline fun <reified INTENT : I> process(noinline intent: @StateDsl suspend IntentScope<INTENT, A, STATE>.() -> Unit) =
+            inline fun <reified INTENT : I> process(noinline intent: @StateDsl suspend IntentNode<INTENT, A, STATE>.() -> Unit) =
                 process(Matcher.any(), intent)
 
             fun <ACTION : A> reduce(
                 actionMatcher: Matcher<A, ACTION>,
-                reduce: @StateDsl ActionScope<ACTION, STATE>.() -> S,
+                reduce: @StateDsl ActionNode<ACTION, STATE>.() -> S,
             ) {
-                actionMap[actionMatcher] = { (action, state) ->
-                    reduce(ActionScope(action, state) as ActionScope<ACTION, STATE>)
+                actionMap[actionMatcher] = { action, state ->
+                    reduce(ActionNode(action, state) as ActionNode<ACTION, STATE>)
                 }
             }
 
-            inline fun <reified ACTION : A> reduce(noinline action: @StateDsl ActionScope<ACTION, STATE>.() -> S) = reduce(Matcher.any(), action)
+            inline fun <reified ACTION : A> reduce(noinline action: @StateDsl ActionNode<ACTION, STATE>.() -> S) = reduce(Matcher.any(), action)
 
             fun build(): StateNode<I, A, S> = StateNode(intentMap = intentMap, actionMap = actionMap)
         }
