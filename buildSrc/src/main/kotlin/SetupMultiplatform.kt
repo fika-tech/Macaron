@@ -3,7 +3,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.plugin.use.PluginDependency
 
 fun Project.setupMultiplatform(
-    vararg buildTargets: BuildTarget = arrayOf(BuildTarget.Ios, BuildTarget.Android),
+    vararg buildTargets: BuildTarget,
     additionalPlugins: List<Provider<PluginDependency>> = listOf(),
     publish: Boolean = true,
 ) {
@@ -16,7 +16,7 @@ fun Project.setupMultiplatform(
 
     setup<BuildTarget.Android>(buildTargets) {
         plugins.apply(Dependencies.plugins.androidLibrary)
-        setupAndroid()
+        setupAndroid(namespace = namespace)
     }
 
     additionalPlugins.forEach { plugins.apply(it) }
