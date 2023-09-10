@@ -21,7 +21,7 @@ object Config {
         const val baseUrl = "https://github.com/$repository"
         const val issueSystem = "Github"
         const val issuesUrl = "${baseUrl}/issues"
-        const val connectionUrl = "${baseUrl}.git"
+        const val connectionUrl = "scm:git:git://${baseUrl}.git"
         const val license = "MIT"
         const val licenseUrl = "https://opensource.org/licenses/MIT"
         val developers = listOf(
