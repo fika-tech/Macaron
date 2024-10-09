@@ -1,25 +1,30 @@
 [versions]
-androidGradle = "7.4.2"
-kotlin = "1.9.10"
-coroutines = "1.7.3"
-androidxTest = "1.5.2"
-androidxJunit = "1.1.5"
+kotlin = "1.9.24"
+coroutines = "1.9.0-RC"
+essenty = "2.1.0"
+androidxTest = "1.6.2"
+androidxJunit = "1.2.1"
 turbine = "1.0.0"
 kotest = "5.4.1"
 kover = "0.5.1"
 kermit = "1.2.2"
-ktLint = "11.5.1"
-dokka = "1.7.20"
+ktLint = "12.1.1"
+dokka = "1.9.20"
+# Android
+android-gradle = "8.5.2"
 
 [libraries]
 # Gradle
 gradle-kotlin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
-gradle-android = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradle" }
+gradle-android = { group = "com.android.tools.build", name = "gradle", version.ref = "android-gradle" }
 gradle-ktlint = { group = "org.jlleitschuh.gradle", name = "ktlint-gradle", version.ref = "ktLint" }
 gradle-kover = { group = "org.jetbrains.kotlinx", name = "kover", version.ref = "kover" }
 gradle-dokka = { group = "org.jetbrains.dokka", name = "dokka-gradle-plugin", version.ref = "dokka" }
 # Kotlinx
+kotlin-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlin" }
 kotlinx-coroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+# Lifecycle
+essenty-lifecycle = { group = "com.arkivanov.essenty", name = "lifecycle", version.ref = "essenty"}
 # Logger
 logger-kermit = { group = "co.touchlab", name = "kermit", version.ref = "kermit" }
 # Test
