@@ -17,4 +17,5 @@ dependencies {
     implementation(deps.gradle.kover)
     implementation(deps.gradle.ktlint)
     implementation(deps.gradle.dokka)
+    implementation("org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.0.0")
 }

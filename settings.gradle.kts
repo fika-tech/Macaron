@@ -23,6 +23,7 @@ pluginManagement {
     }
 }
 
+include(":android")
 include(":macaron-core")
 include(":macaron-statemachine")
 include(":macaron-logging")

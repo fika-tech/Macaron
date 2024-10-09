@@ -14,6 +14,8 @@ fun Project.kotlin(block: KotlinMultiplatformExtension.() -> Unit) = extensions.
 
 fun Project.android(block: BaseExtension.() -> Unit) = extensions.getByType<BaseExtension>().block()
 
+fun Project.androidApp(block: BaseAppModuleExtension.() -> Unit) = extensions.configure(block)
+
 fun Project.ktlint(block: KtlintExtension.() -> Unit) = extensions.getByType(KtlintExtension::class.java).block()
 
 fun Project.publications(block: PublishingExtension.() -> Unit) = extensions.getByType<PublishingExtension>().block()
