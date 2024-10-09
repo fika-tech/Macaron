@@ -26,5 +26,4 @@ pluginManagement {
 include(":macaron-core")
 include(":macaron-statemachine")
 include(":macaron-logging")
-include(":macaron-messaging")
 include(":macaron-statesaver")
