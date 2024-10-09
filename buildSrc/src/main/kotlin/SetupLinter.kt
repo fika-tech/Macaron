@@ -10,7 +10,6 @@ fun Project.setupLinter() {
         ignoreFailures.set(true)
         coloredOutput.set(true)
         outputColorName.set("RED")
-        additionalEditorconfigFile.set(File("${rootDir.path}/.editorconfig"))
         reporters {
             reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
             reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.HTML)

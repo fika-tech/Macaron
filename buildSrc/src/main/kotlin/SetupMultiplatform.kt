@@ -40,8 +40,8 @@ fun Project.setupMultiplatform(
         }
 
         setup<BuildTarget.Ios>(buildTargets) {
-            ios()
-            // TODO: Setup iOS Simulator
+            iosX64()
+            iosArm64()
             iosSimulatorArm64()
         }
 
@@ -50,10 +50,6 @@ fun Project.setupMultiplatform(
         }
 
         sourceSets {
-            setup<BuildTarget.Ios>(buildTargets) {
-                iosSimulatorArm64Main.dependsOn(iosMain)
-                iosSimulatorArm64Test.dependsOn(iosTest)
-            }
             all {
                 languageSettings.apply {
                     optIn("kotlin.RequiresOptIn")

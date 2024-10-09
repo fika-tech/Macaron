@@ -5,6 +5,8 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(Dependencies.kotlinx.coroutinesCore)
+                implementation(Dependencies.logger.kermit)
+                implementation(Dependencies.essenty.lifecycle)
             }
         }
     }

@@ -5,6 +5,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":macaron-core"))
+                implementation(Dependencies.essenty.lifecycle)
                 implementations(
                     Dependencies.kotlinx.coroutinesCore,
                 )

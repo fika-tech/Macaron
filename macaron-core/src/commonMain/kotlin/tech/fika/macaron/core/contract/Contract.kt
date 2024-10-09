@@ -2,21 +2,9 @@ package tech.fika.macaron.core.contract
 
 sealed interface Contract
 
-/**
- * Models any form of user interaction
- */
-interface Intent : Contract
+interface Action : Contract
 
-/**
- * Result from a processor
- */
-interface Action : Contract {
-    interface Event : Action
-    interface Message : Action
-}
+interface Event : Contract
 
-/**
- * Describe the state of the screen
- */
 interface State : Contract
 
