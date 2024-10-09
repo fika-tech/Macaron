@@ -1,23 +1,36 @@
 package tech.fika.macaron.statemachine.components
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flowOf
 import tech.fika.macaron.core.components.Processor
 import tech.fika.macaron.core.contract.Action
-import tech.fika.macaron.core.contract.Intent
+import tech.fika.macaron.core.contract.Event
 import tech.fika.macaron.core.contract.State
+import tech.fika.macaron.core.contract.Transition
+import tech.fika.macaron.statemachine.nodes.ActionNode
 
-class StateMachineProcessor<I : Intent, A : Action, S : State>(
-    private val stateMachine: StateMachine<I, A, S>,
-) : Processor<I, A, S> {
-    override suspend fun process(intent: I, state: S): Flow<A> = stateMachine.stateMap
-        .filterKeys { key -> key.matches(state) }
+class StateMachineProcessor<A : Action, E : Event, S : State>(
+    private val stateMachine: StateMachine<A, E, S>,
+) : Processor<A, E, S> {
+    override fun process(
+        action: A,
+        state: S,
+        dispatch: (A) -> Unit,
+        send: (E) -> Unit,
+    ): Transition<A, S, S> = stateMachine.stateMap
+        .filterKeys { key -> key.matches(value = state) }
         .values
-        .flatMap { stateNode -> stateNode.intentMap.entries }
-        .find { intentMatcher -> intentMatcher.key.matches(intent) }
+        .flatMap { stateNode -> stateNode.actionMap.entries }
+        .find { actionMatcher -> actionMatcher.key.matches(value = action) }
         ?.value
-        ?.invoke(intent, state)
-        ?.filterNotNull()
-        ?: flowOf()
+        ?.invoke(
+            ActionNode(
+                action = action,
+                state = state,
+                dispatch = {
+                    dispatch(it)
+                    Transition.Empty
+                },
+                send = send
+            )
+        )
+        ?: Transition.Invalid
 }

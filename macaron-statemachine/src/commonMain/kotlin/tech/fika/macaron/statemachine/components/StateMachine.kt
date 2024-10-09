@@ -1,124 +1,24 @@
 package tech.fika.macaron.statemachine.components
 
-import kotlin.coroutines.CoroutineContext
-import kotlin.reflect.KClass
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.flow
-import tech.fika.macaron.core.components.Middleware
 import tech.fika.macaron.core.components.Processor
-import tech.fika.macaron.core.components.Reducer
 import tech.fika.macaron.core.contract.Action
-import tech.fika.macaron.core.contract.Contract
-import tech.fika.macaron.core.contract.Intent
+import tech.fika.macaron.core.contract.Event
 import tech.fika.macaron.core.contract.State
-import tech.fika.macaron.core.factory.StoreFactory
+import tech.fika.macaron.statemachine.builders.Matcher
+import tech.fika.macaron.statemachine.nodes.RootNode
+import tech.fika.macaron.statemachine.builders.StateMachineBuilder
+import tech.fika.macaron.statemachine.nodes.StateNode
 
-fun <I : Intent, A : Action, S : State> StoreFactory.create(
-    initialState: S,
-    stateMachine: StateMachine<I, A, S>,
-    middlewares: List<Middleware<I, A, S>> = emptyList(),
-    coroutineContext: CoroutineContext = Dispatchers.Main,
-) = create(
-    initialState = initialState,
-    processor = stateMachine.processor,
-    reducer = stateMachine.reducer,
-    middlewares = middlewares,
-    coroutineContext = coroutineContext,
-)
-
-@Suppress("UNCHECKED_CAST")
-open class StateMachine<I : Intent, A : Action, S : State>(
-    val stateMap: Map<Matcher<S, S>, StateNode<I, A, S>>,
+class StateMachine<A : Action, E : Event, S : State>(
+    private val rootNode: RootNode<A, E, S>,
 ) {
-    constructor(builder: Builder<I, A, S>.() -> Unit) : this(Builder<I, A, S>().apply(builder).build().stateMap)
-
-    val processor: Processor<I, A, S> get() = StateMachineProcessor(this)
-    val reducer: Reducer<A, S> get() = StateMachineReducer(this)
-
-    class Matcher<T : Contract, out R : T> private constructor(private val kClass: KClass<R>) {
-
-        private val predicates = mutableListOf<(T) -> Boolean>({ kClass.isInstance(it) })
-        fun matches(value: T) = predicates.all { it(value) }
-
-        companion object {
-            fun <T : Contract, R : T> any(kClass: KClass<R>): Matcher<T, R> = Matcher(kClass)
-            inline fun <T : Contract, reified R : T> any(): Matcher<T, R> = any(R::class)
-        }
-    }
-
-    /* Nodes */
-
-    data class StateNode<I : Intent, A : Action, S : State>(
-        val intentMap: Map<Matcher<I, I>, suspend (I, S) -> Flow<A>>,
-        val actionMap: Map<Matcher<A, A>, (A, S) -> S?>,
+    constructor(builder: StateMachineBuilder<A, E, S>.() -> Unit) : this(
+        StateMachineBuilder<A, E, S>().apply(builder).build().rootNode
     )
 
-    data class IntentNode<I : Intent, A : Action, S : State>(
-        val intent: I,
-        val state: S,
-        internal val collector: FlowCollector<A>,
-    ) {
-        suspend fun emit(action: A) = collector.emit(action)
-        suspend operator fun A.unaryPlus() = emit(this)
-    }
-
-    data class ActionNode<A : Action, S : State>(val action: A, val state: S)
-
-    /* Annotations */
-
-    @DslMarker
-    @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
-    private annotation class StateMachineDsl
-
-    @DslMarker
-    @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
-    private annotation class StateDsl
-
-    @StateMachineDsl
-    class Builder<I : Intent, A : Action, S : State> {
-        private val stateMap = LinkedHashMap<Matcher<S, S>, StateNode<I, A, S>>()
-
-        fun <STATE : S> state(stateMatcher: Matcher<S, STATE>, builder: @StateMachineDsl StateBuilder<STATE>.() -> Unit) {
-            stateMap[stateMatcher] = StateBuilder<STATE>().apply(builder).build()
-        }
-
-        inline fun <reified STATE : S> state(noinline builder: @StateMachineDsl StateBuilder<STATE>.() -> Unit) = state(Matcher.any(), builder)
-
-        fun build(): StateMachine<I, A, S> = StateMachine(stateMap.toMap())
-
-        @StateDsl
-        inner class StateBuilder<STATE : S> {
-            private val intentMap = mutableMapOf<Matcher<I, I>, suspend (I, S) -> Flow<A>>()
-            private val actionMap = mutableMapOf<Matcher<A, A>, (A, S) -> S?>()
-
-            fun <INTENT : I> process(
-                intentMatcher: Matcher<I, INTENT>,
-                process: @StateDsl suspend IntentNode<INTENT, A, STATE>.() -> Unit,
-            ) {
-                intentMap[intentMatcher] = { intent, state ->
-                    flow {
-                        process(IntentNode(intent = intent, state = state, collector = this) as IntentNode<INTENT, A, STATE>)
-                    }
-                }
-            }
-
-            inline fun <reified INTENT : I> process(noinline intent: @StateDsl suspend IntentNode<INTENT, A, STATE>.() -> Unit) =
-                process(Matcher.any(), intent)
-
-            fun <ACTION : A> reduce(
-                actionMatcher: Matcher<A, ACTION>,
-                reduce: @StateDsl ActionNode<ACTION, STATE>.() -> S,
-            ) {
-                actionMap[actionMatcher] = { action, state ->
-                    reduce(ActionNode(action, state) as ActionNode<ACTION, STATE>)
-                }
-            }
-
-            inline fun <reified ACTION : A> reduce(noinline action: @StateDsl ActionNode<ACTION, STATE>.() -> S) = reduce(Matcher.any(), action)
-
-            fun build(): StateNode<I, A, S> = StateNode(intentMap = intentMap, actionMap = actionMap)
-        }
-    }
+    val initialState: S get() = rootNode.initialState ?: error("Initial State is not set")
+    val stateMap: Map<Matcher<S, S>, StateNode<A, E, S>> = rootNode.stateMap
+    val processor: Processor<A, E, S> get() = StateMachineProcessor(stateMachine = this)
+    val lifecycleNode = rootNode.lifecycleNode
+    val interceptors = rootNode.interceptorNode.interceptors
 }

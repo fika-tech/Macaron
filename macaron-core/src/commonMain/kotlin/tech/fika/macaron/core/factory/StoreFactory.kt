@@ -1,46 +1,43 @@
 package tech.fika.macaron.core.factory
 
-import kotlin.coroutines.CoroutineContext
+import com.arkivanov.essenty.lifecycle.Lifecycle
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import tech.fika.macaron.core.components.Middleware
+import tech.fika.macaron.core.components.Interceptor
 import tech.fika.macaron.core.components.Processor
-import tech.fika.macaron.core.components.Reducer
-import tech.fika.macaron.core.components.Store
+import tech.fika.macaron.core.components.StateListener
 import tech.fika.macaron.core.contract.Action
-import tech.fika.macaron.core.contract.Intent
+import tech.fika.macaron.core.contract.Event
 import tech.fika.macaron.core.contract.State
+import tech.fika.macaron.core.lifecycle.LifecycleListener
+import tech.fika.macaron.core.store.Store
 
 interface StoreFactory {
-    fun <I : Intent, A : Action, S : State> create(
+    fun <A : Action, E : Event, S : State> create(
         initialState: S,
-        processor: Processor<I, A, S>,
-        reducer: Reducer<A, S>,
-        middlewares: List<Middleware<I, A, S>> = emptyList(),
-        coroutineContext: CoroutineContext = Dispatchers.Main.immediate,
-    ): Store<I, A, S>
+        processor: Processor<A, E, S>,
+        lifecycle: Lifecycle? = null,
+        stateListener: StateListener<A, S>? = null,
+        lifecycleListener: LifecycleListener<A, S>? = null,
+        interceptors: List<Interceptor<A, E, S>> = emptyList(),
+        coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate),
+    ): Store<A, E, S>
 
-    fun <I : Intent, A : Action, S : State> create(
+    fun <A : Action, E : Event, S : State> create(
         initialState: S,
-        processor: Processor<I, A, S>,
-        reducer: Reducer<A, S>,
-        middlewares: List<Middleware<I, A, S>> = emptyList(),
-    ): Store<I, A, S> = create(
+        processor: Processor<A, E, S>,
+        interceptors: List<Interceptor<A, E, S>> = emptyList(),
+    ): Store<A, E, S> = create(
         initialState = initialState,
         processor = processor,
-        reducer = reducer,
-        middlewares = middlewares,
-        coroutineContext = Dispatchers.Main.immediate
+        interceptors = interceptors,
     )
 
-    fun <I : Intent, A : Action, S : State> create(
+    fun <A : Action, E : Event, S : State> create(
         initialState: S,
-        processor: Processor<I, A, S>,
-        reducer: Reducer<A, S>,
-    ): Store<I, A, S> = create(
+        processor: Processor<A, E, S>,
+    ): Store<A, E, S> = create(
         initialState = initialState,
         processor = processor,
-        reducer = reducer,
-        middlewares = emptyList(),
-        coroutineContext = Dispatchers.Main.immediate
     )
 }
