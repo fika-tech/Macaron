@@ -55,6 +55,10 @@ captures/
 .idea/navEditor.xml
 # Android Studio Arctic Fox in .gitignore file.
 .idea/deploymentTargetDropDown.xml
+.idea/codeStyles
+.idea/deploymentTargetSelector.xml
+.idea/kotlinc.xml
+.idea/migrations.xml
 
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.
@@ -92,5 +96,7 @@ lint/reports/
 
 # Android Profiling
 *.hprof
+
+.kotlin
 
 artifacts/
