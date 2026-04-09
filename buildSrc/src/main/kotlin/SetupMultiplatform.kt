@@ -1,6 +1,7 @@
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.plugin.use.PluginDependency
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 fun Project.setupMultiplatform(
     vararg buildTargets: BuildTarget,
@@ -30,8 +31,8 @@ fun Project.setupMultiplatform(
         }
 
         setup<BuildTarget.Android>(buildTargets) {
-            android {
-                publishAllLibraryVariants()
+            androidTarget {
+                publishLibraryVariants()
             }
         }
 
