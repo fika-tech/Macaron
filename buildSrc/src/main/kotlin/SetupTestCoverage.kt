@@ -1,10 +1,17 @@
-import kotlinx.kover.tasks.KoverMergedTask
+import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
 
 fun Project.setupTestCoverage() {
-    tasks.withType(KoverMergedTask::class.java) {
-        excludes = listOf(
-            "*.BuildConfig",
-        )
+    plugins.withId("org.jetbrains.kotlinx.kover") {
+        extensions.configure<KoverProjectExtension> {
+            reports {
+                filters {
+                    excludes {
+                        classes("*.BuildConfig")
+                    }
+                }
+            }
+        }
     }
 }
